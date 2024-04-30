@@ -397,6 +397,15 @@ void command()
     }
 }
 
+template <typename T>
+T get_ros_parameter(ros::NodeHandle &nh, const std::string parameter_name, T &parameter, T default_val)
+{
+    nh.param<T>(parameter_name.c_str(), parameter, default_val);
+    // ENABLE_SCREEN_PRINTF;
+    cout << "[Ros_parameter]: " << parameter_name << " ==> " << parameter << std::endl;
+    return parameter;
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "loop_fusion");
@@ -407,17 +416,11 @@ int main(int argc, char **argv)
     VISUALIZATION_SHIFT_Y = 0;
     SKIP_CNT = 0;
     SKIP_DIS = 0;
-
-    if(argc != 2)
-    {
-        printf("please intput: rosrun loop_fusion loop_fusion_node [config file] \n"
-               "for example: rosrun loop_fusion loop_fusion_node "
-               "/home/tony-ws1/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml \n");
-        return 0;
-    }
     
-    string config_file = argv[1];
-    printf("config_file: %s\n", argv[1]);
+    string config_file = "";
+
+    get_ros_parameter<std::string>(n, "config_file", config_file, "/home/yifan/MyCode/vins_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml");
+    printf("config_file: %s\n", config_file);
 
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())

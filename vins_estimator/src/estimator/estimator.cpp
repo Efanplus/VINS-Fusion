@@ -9,6 +9,7 @@
 
 #include "estimator.h"
 #include "../utility/visualization.h"
+#include "../logs.h"
 
 Estimator::Estimator(): f_manager{Rs}
 {
@@ -167,7 +168,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         featureFrame = featureTracker.trackImage(t, _img);
     else
         featureFrame = featureTracker.trackImage(t, _img, _img1);
-    //printf("featureTracker time: %f\n", featureTrackerTime.toc());
+    // printf("featureTracker with img1 %d, time: %f\n", int(_img1.empty()), featureTrackerTime.toc());
 
     if (SHOW_TRACK)
     {
@@ -269,6 +270,7 @@ bool Estimator::IMUAvailable(double t)
 
 void Estimator::processMeasurements()
 {
+    VINS_DEBUG_STREAM("process measurement");
     while (1)
     {
         //printf("process measurments\n");
@@ -291,6 +293,7 @@ void Estimator::processMeasurements()
                     std::this_thread::sleep_for(dura);
                 }
             }
+            VINS_DEBUG_STREAM("process feature time: " << std::fixed << std::setprecision(3) << curTime);
             mBuf.lock();
             if(USE_IMU)
                 getIMUInterval(prevTime, curTime, accVector, gyrVector);

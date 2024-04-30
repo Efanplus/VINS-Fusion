@@ -20,6 +20,7 @@
 #include "estimator/estimator.h"
 #include "estimator/parameters.h"
 #include "utility/visualization.h"
+#include "logs.h"
 
 Estimator estimator;
 
@@ -147,9 +148,10 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
     return;
 }
 
-
+// not used
 void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
 {
+    VINS_DEBUG_STREAM_ONCE("the first feature comming ---");
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame;
     for (unsigned int i = 0; i < feature_msg->points.size(); i++)
     {
@@ -221,23 +223,25 @@ void cam_switch_callback(const std_msgs::BoolConstPtr &switch_msg)
     return;
 }
 
+template <typename T>
+T get_ros_parameter(ros::NodeHandle &nh, const std::string parameter_name, T &parameter, T default_val)
+{
+    nh.param<T>(parameter_name.c_str(), parameter, default_val);
+    // ENABLE_SCREEN_PRINTF;
+    cout << "[Ros_parameter]: " << parameter_name << " ==> " << parameter << std::endl;
+    return parameter;
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "vins_estimator");
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
-    if(argc != 2)
-    {
-        printf("please intput: rosrun vins vins_node [config file] \n"
-               "for example: rosrun vins vins_node "
-               "~/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml \n");
-        return 1;
-    }
+    string config_file = "";
 
-    string config_file = argv[1];
-    printf("config_file: %s\n", argv[1]);
-
+    get_ros_parameter<std::string>(n, "config_file", config_file, "/home/yifan/MyCode/vins_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml");
+    printf("config_file: %s\n", config_file);
     readParameters(config_file);
     estimator.setParameter();
 
@@ -254,7 +258,7 @@ int main(int argc, char **argv)
     {
         sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
     }
-    ros::Subscriber sub_feature = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
+    // ros::Subscriber sub_feature = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
     ros::Subscriber sub_img0 = n.subscribe(IMAGE0_TOPIC, 100, img0_callback);
     ros::Subscriber sub_img1;
     if(STEREO)
